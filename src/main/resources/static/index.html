@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地小说阅读器</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- 自定义CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/themes.css">
+
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 主页专用CSS -->
+    <style>
+        .novel-card {
+            height: 100%;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid var(--card-border);
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .novel-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .novel-cover {
+            height: 160px;
+            background: linear-gradient(135deg, var(--sidebar-hover), var(--primary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .novel-cover::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.1));
+        }
+
+        .novel-info {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .novel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.8em;
+        }
+
+        .novel-meta {
+            font-size: 0.85rem;
+            color: var(--text-color-muted);
+            margin-bottom: 15px;
+            flex: 1;
+        }
+
+        .novel-progress {
+            margin: 15px 0;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: var(--text-color-muted);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 16px;
+            border-radius: 3px;
+            background-color: var(--primary-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-color-muted);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+            color: var(--text-color-muted);
+        }
+
+        .search-container {
+            max-width: 400px;
+            min-width: 250px;
+            margin: 0;
+        }
+
+        .novel-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .novel-actions .btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+        }
+
+        .history-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            background-color: var(--sidebar-hover);
+            border-color: var(--card-border);
+            transform: translateX(4px);
+        }
+
+        .history-item a {
+            text-decoration: none;
+            color: var(--text-color);
+            display: block;
+        }
+
+        .history-title {
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .history-chapter {
+            font-size: 0.85rem;
+            color: var(--text-color-muted);
+            line-height: 1.3;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--text-color-muted);
+            margin-top: 4px;
+        }
+
+        .clear-history-btn {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+
+        .novel-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 10px 0;
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-color-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* 顶部操作栏样式 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .page-header .page-title {
+            margin: 0;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-header-actions {
+                flex-direction: column;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+
+            .novel-card {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+    <!-- 防止主题闪烁的内联脚本 -->
+    <script>
+        // 立即执行，在CSS加载前设置主题
+        (function() {
+            try {
+                // 从localStorage获取保存的主题
+                const savedTheme = localStorage.getItem('theme');
+                const htmlElement = document.documentElement;
+
+                // 设置主题（默认为浅色）
+                if (savedTheme === 'dark') {
+                    htmlElement.setAttribute('data-theme', 'dark');
+                    htmlElement.style.colorScheme = 'dark';
+                } else {
+                    htmlElement.setAttribute('data-theme', 'light');
+                    htmlElement.style.colorScheme = 'light';
+                }
+
+                // 添加一个类名，表示主题已加载
+                htmlElement.classList.add('theme-loaded');
+            } catch (error) {
+                console.error('主题初始化失败:', error);
+            }
+        })();
+    </script>
+</head>
+<body>
+<!-- 侧边导航栏 -->
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-book me-2"></i>小说阅读器</h3>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li class="nav-item active">
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-home me-2"></i>主页
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="import.html" class="nav-link">
+                <i class="fas fa-upload me-2"></i>导入小说
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-cog me-2"></i>阅读设置
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+
+
+        <!-- 历史记录区域 -->
+        <li class="nav-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="sidebar-title mb-0">最近阅读</h6>
+                <button id="clearHistoryBtn" class="btn btn-sm btn-outline-secondary py-0 px-2 d-none"
+                        title="清空历史记录">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            <ul id="history-list" class="history-list">
+                <!-- 历史记录将通过JS动态加载 -->
+                <li class="history-item text-muted">
+                    <small>暂无阅读记录</small>
+                </li>
+            </ul>
+        </li>
+
+        <hr class="sidebar-divider">
+
+        <!-- 书架统计 -->
+        <li class="nav-section">
+            <h6 class="sidebar-title">书架统计</h6>
+            <div class="stats-container p-3">
+                <div class="d-flex justify-content-around text-center">
+                    <div class="stat-item">
+                        <div id="totalNovels" class="stat-value">0</div>
+                        <div class="stat-label">本小说</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="totalChapters" class="stat-value">0</div>
+                        <div class="stat-label">章</div>
+                    </div>
+                </div>
+            </div>
+        </li>
+
+        <hr class="sidebar-divider">
+
+        <!-- 主题切换 -->
+        <li class="nav-item theme-toggle-container">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="themeToggle">
+                <label class="form-check-label" for="themeToggle">
+                    <i class="fas fa-moon me-2"></i>深色模式
+                </label>
+            </div>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <small class="text-muted">仅本地访问</small>
+    </div>
+</nav>
+
+<!-- 主内容区域 -->
+<main id="mainContent" class="main-content">
+    <div class="container-fluid">
+        <!-- 顶部标题栏 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">我的小说库</h1>
+                <p class="text-muted mb-0" id="libraryStats">共 0 本小说</p>
+            </div>
+            <div class="d-flex gap-2">
+                <!-- 搜索框 -->
+                <div class="search-container">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="搜索小说...">
+                        <button id="clearSearchBtn" class="btn btn-outline-secondary" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="addNovelBtn" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>导入小说
+                </button>
+            </div>
+        </div>
+
+        <!-- 小说列表 -->
+        <div id="novelListContainer" class="row g-4">
+            <!-- 小说卡片将通过JS动态加载 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="fas fa-book-open"></i>
+            <h4>暂无小说</h4>
+            <p class="mb-4">点击"导入小说"按钮添加你的第一本小说</p>
+            <a href="import.html" class="btn btn-primary">
+                <i class="fas fa-upload me-2"></i>立即导入
+            </a>
+        </div>
+
+        <!-- 搜索结果空状态 -->
+        <div id="searchEmptyState" class="empty-state" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h4>未找到相关小说</h4>
+            <p>尝试使用不同的关键词搜索，或者导入新小说</p>
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 自定义JS -->
+<script src="js/storage.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

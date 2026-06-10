@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导入小说 - 本地小说阅读器</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- 自定义CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/themes.css">
+
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 导入页面专用CSS -->
+    <style>
+        .import-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .import-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .import-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .import-header i {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--card-border);
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            background-color: var(--sidebar-bg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: var(--sidebar-hover);
+            transform: translateY(-2px);
+        }
+
+        .upload-area i {
+            font-size: 4rem;
+            color: var(--text-color-muted);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover i {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .selected-file {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            background-color: var(--sidebar-bg);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .selected-file h6 {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--text-color-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .upload-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(var(--primary-color-rgb), 0.2);
+        }
+
+        .spinner-border {
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            margin-top: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .upload-progress {
+            height: 8px;
+            margin: 20px 0;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: var(--bg-color-tertiary);
+        }
+
+        .progress-bar-striped {
+            background-image: linear-gradient(
+                    45deg,
+                    rgba(255, 255, 255, 0.15) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    rgba(255, 255, 255, 0.15) 75%,
+                    transparent 75%,
+                    transparent
+            );
+            background-size: 1rem 1rem;
+        }
+
+        .alert {
+            margin-top: 20px;
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .btn-container button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .btn-container button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 上传成功动画 */
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .upload-success {
+            animation: successPulse 2s ease-in-out infinite;
+        }
+    </style>
+    <!-- 防止主题闪烁的内联脚本 -->
+    <script>
+        // 立即执行，在CSS加载前设置主题
+        (function() {
+            try {
+                // 从localStorage获取保存的主题
+                const savedTheme = localStorage.getItem('theme');
+                const htmlElement = document.documentElement;
+
+                // 设置主题（默认为浅色）
+                if (savedTheme === 'dark') {
+                    htmlElement.setAttribute('data-theme', 'dark');
+                    htmlElement.style.colorScheme = 'dark';
+                } else {
+                    htmlElement.setAttribute('data-theme', 'light');
+                    htmlElement.style.colorScheme = 'light';
+                }
+
+                // 添加一个类名，表示主题已加载
+                htmlElement.classList.add('theme-loaded');
+            } catch (error) {
+                console.error('主题初始化失败:', error);
+            }
+        })();
+    </script>
+</head>
+<body>
+
+<!-- 侧边导航栏 -->
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-book me-2"></i>小说阅读器</h3>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li class="nav-item">
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-home me-2"></i>主页
+            </a>
+        </li>
+        <li class="nav-item active">
+            <a href="import.html" class="nav-link">
+                <i class="fas fa-upload me-2"></i>导入小说
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-cog me-2"></i>阅读设置
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+
+        <!-- 主题切换 -->
+        <li class="nav-item theme-toggle-container">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="themeToggle">
+                <label class="form-check-label" for="themeToggle">
+                    <i class="fas fa-moon me-2"></i>深色模式
+                </label>
+            </div>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <small class="text-muted">仅本地访问</small>
+    </div>
+</nav>
+
+<!-- 主内容区域 -->
+<main id="mainContent" class="main-content">
+    <div class="import-container">
+        <div class="import-card">
+            <div class="import-header">
+                <i class="fas fa-file-upload"></i>
+                <h1 class="page-title">导入小说</h1>
+                <p class="text-muted">支持TXT格式文件，上传后自动保存到本地</p>
+            </div>
+
+            <!-- 文件上传区域 -->
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h4>拖放文件到此处</h4>
+                <p class="text-muted">或点击选择TXT文件</p>
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+            </div>
+
+            <!-- 已选择文件信息 -->
+            <div id="selectedFileInfo" class="selected-file" style="display: none;">
+                <h6>已选择文件：</h6>
+                <p id="fileName" class="mb-1"></p>
+                <p id="fileSize" class="text-muted mb-0"></p>
+            </div>
+
+            <!-- 上传按钮 -->
+            <button id="uploadBtn" class="btn btn-primary upload-btn" disabled>
+                <i class="fas fa-upload me-2"></i>开始上传
+            </button>
+
+            <!-- 进度指示器 -->
+            <div id="progressIndicator" class="progress-indicator" style="display: none;">
+                <div class="progress upload-progress">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+                <p id="progressText" class="mb-0">正在上传文件...</p>
+            </div>
+
+            <!-- 错误信息 -->
+            <div id="errorAlert" class="alert alert-danger" style="display: none;" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span id="errorMessage"></span>
+            </div>
+
+            <!-- 按钮容器（上传成功或失败时显示） -->
+            <div id="actionButtons" class="btn-container" style="display: none;">
+                <button id="viewNovelBtn" class="btn btn-primary">
+                    <i class="fas fa-book-open me-2"></i>查看小说
+                </button>
+                <button id="importAnotherBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-plus me-2"></i>继续导入
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 共享JS -->
+<script src="js/storage.js"></script>
+<script src="js/theme.js"></script>
+
+<!-- 导入页面专用JS -->
+<script src="js/import.js"></script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+
+
+/* 在文件最顶部添加初始主题设置 */
+:root {
+    /* 白天模式变量 */
+    --primary-color: #007bff;
+    --primary-color-dark: #0056b3;
+    --primary-color-light: #6c8eff;
+    --primary-color-rgb: 0, 123, 255;
+
+    --text-color: #212529;
+    --text-color-muted: #6c757d;
+    --text-color-light: #f8f9fa;
+
+    --bg-color: #ffffff;
+    --bg-color-secondary: #f8f9fa;
+    --bg-color-tertiary: #e9ecef;
+
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+    --card-shadow: rgba(0, 0, 0, 0.05);
+
+    --sidebar-bg: #f8f9fa;
+    --sidebar-hover: #e9ecef;
+    --sidebar-border: #dee2e6;
+
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --input-focus: #007bff;
+    --input-focus-rgb: 0, 123, 255;
+
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+}
+
+/* 设置默认主题为浅色 */
+html {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    color-scheme: light;
+}
+
+/* 深色模式变量 */
+html[data-theme="dark"] {
+    --primary-color: #4dabf7;
+    --primary-color-dark: #339af0;
+    --primary-color-light: #74c0fc;
+    --primary-color-rgb: 77, 171, 247;
+
+    --text-color: #f8f9fa;
+    --text-color-muted: #adb5bd;
+    --text-color-light: #212529;
+
+    --bg-color: #212529;
+    --bg-color-secondary: #343a40;
+    --bg-color-tertiary: #495057;
+
+    --card-bg: #343a40;
+    --card-border: #495057;
+    --card-shadow: rgba(0, 0, 0, 0.15);
+
+    --sidebar-bg: #343a40;
+    --sidebar-hover: #495057;
+    --sidebar-border: #495057;
+
+    --input-bg: #495057;
+    --input-border: #6c757d;
+    --input-focus: #4dabf7;
+    --input-focus-rgb: 77, 171, 247;
+
+    --success-color: #51cf66;
+    --warning-color: #ffd43b;
+    --danger-color: #ff6b6b;
+    --info-color: #22b8cf;
+}
+
+/* 应用主题变量到全局元素 */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+}
+
+.sidebar-header h3 {
+    color: var(--text-color);
+}
+
+/* 导航链接 */
+.nav-link {
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background-color: var(--sidebar-hover);
+    color: var(--primary-color);
+}
+
+/* 进度条颜色修复 */
+.progress-bar {
+    background-color: var(--primary-color) !important;
+}
+
+/* 表单控件样式优化 */
+.form-control {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+.form-control:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 0.2rem rgba(var(--input-focus-rgb), 0.25);
+}
+
+/* 开关样式 */
+.form-check-input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* 卡片阴影优化 */
+.novel-card, .import-card {
+    box-shadow: 0 4px 20px var(--card-shadow);
+}
+
+/* 悬停效果优化 */
+.novel-card:hover {
+    box-shadow: 0 12px 32px var(--card-shadow);
+}
+
+/* 输入组样式优化 */
+.input-group {
+    background-color: var(--input-bg);
+}
+
+/* 按钮悬停效果优化 */
+.btn:hover {
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.2);
+}
+
+/* 确保文本在深色模式下的可读性 */
+[data-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
+
+/* 确保表单标签在深色模式下的可读性 */
+[data-theme="dark"] .form-label {
+    color: #f8f9fa;
+}
+
+/* 确保表格在深色模式下的可读性 */
+[data-theme="dark"] .table {
+    color: #f8f9fa;
+    border-color: #495057;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #2c3136;
+}
+
+/* 确保警告框在深色模式下的可读性 */
+[data-theme="dark"] .alert {
+    background-color: #2c3136;
+    border-color: #495057;
+    color: #f8f9fa;
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: rgba(220, 53, 69, 0.15);
+    border-color: #dc3545;
+    color: #f8f9fa;
+}
+
+/* 确保下拉菜单在深色模式下的样式 */
+[data-theme="dark"] .dropdown-menu {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: #f8f9fa;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: #495057;
+    color: #f8f9fa;
+}
+
+/* 确保模态框在深色模式下的样式 */
+[data-theme="dark"] .modal-content {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #f8f9fa;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: #495057;
+}
+
+/* 工具提示样式 */
+.tooltip-inner {
+    background-color: var(--bg-color-secondary);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+}
+
+.bs-tooltip-auto[x-placement^="top"] .arrow::before,
+.bs-tooltip-top .arrow::before {
+    border-top-color: var(--card-border);
+}

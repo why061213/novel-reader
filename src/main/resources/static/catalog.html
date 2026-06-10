@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说目录 - 本地小说阅读器</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- 自定义CSS -->
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/themes.css">
+
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 目录页面专用CSS -->
+    <style>
+        .chapter-item.max-progress {
+            border-left: 3px solid var(--primary-color);
+            background-color: rgba(var(--primary-color-rgb), 0.05);
+        }
+        .chapter-item.last-read {
+            border-left: 3px solid var(--warning);
+            background-color: rgba(var(--warning-rgb), 0.05);
+        }
+        /* 主布局 */
+        .main-content {
+            padding: 20px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .container-fluid {
+            height: 100%;
+        }
+
+        .row.h-100 {
+            margin: 0;
+        }
+
+        /* 小说信息区域样式 */
+        .novel-header {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px var(--card-shadow);
+            border: 1px solid var(--card-border);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .novel-cover-section {
+            flex-shrink: 0;
+        }
+
+        .novel-info-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0; /* 防止内容溢出 */
+        }
+
+        .novel-cover-large {
+            width: 140px;
+            height: 200px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--sidebar-hover), var(--primary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .novel-title-large {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-color);
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .novel-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .novel-meta-item i {
+            width: 20px;
+            text-align: center;
+            color: var(--text-color-muted);
+            flex-shrink: 0;
+        }
+
+        .novel-basic-info {
+            flex-shrink: 0;
+        }
+
+        .novel-stats-container {
+            flex: 1;
+            min-height: 0; /* 防止内容溢出 */
+            overflow: hidden;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background-color: var(--sidebar-bg);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-color-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+
+        .novel-actions {
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        .novel-actions .btn {
+            font-size: 0.9rem;
+            padding: 8px 10px;
+            white-space: nowrap;
+        }
+
+        /* 目录区域样式 */
+        .catalog-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px var(--card-shadow);
+            border: 1px solid var(--card-border);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .catalog-header {
+            flex-shrink: 0;
+        }
+
+        .catalog-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .search-chapters {
+            width: 250px;
+        }
+
+        .chapters-list-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chapters-list {
+            max-height: 100%;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .chapters-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chapters-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chapters-list::-webkit-scrollbar-thumb {
+            background-color: var(--card-border);
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--card-border);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+
+        .chapter-item:hover {
+            background-color: var(--sidebar-hover);
+            transform: translateX(5px);
+        }
+
+        .chapter-item.current {
+            background-color: rgba(var(--primary-color-rgb), 0.1);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .chapter-item.read {
+            opacity: 0.7;
+        }
+
+        .chapter-item.read .chapter-title {
+            color: var(--text-color-muted);
+            text-decoration: line-through;
+        }
+
+        .chapter-number {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--sidebar-bg);
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color);
+            flex-shrink: 0;
+        }
+
+        .chapter-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chapter-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chapter-progress {
+            font-size: 0.85rem;
+            color: var(--text-color-muted);
+        }
+
+        .chapter-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .chapter-item:hover .chapter-actions {
+            opacity: 1;
+        }
+
+        /* 目录空状态 */
+        .catalog-empty {
+            color: var(--text-color-muted);
+        }
+
+        /* 分页信息 */
+        .catalog-footer {
+            flex-shrink: 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .novel-header {
+                padding: 15px;
+            }
+
+            .novel-cover-large {
+                width: 100px;
+                height: 140px;
+                font-size: 2rem;
+            }
+
+            .novel-title-large {
+                font-size: 1.25rem;
+                -webkit-line-clamp: 3;
+            }
+
+            .novel-meta-item {
+                font-size: 0.85rem;
+            }
+
+            .search-chapters {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .catalog-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .catalog-header .d-flex {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stat-box {
+                padding: 12px 8px;
+                min-height: 70px;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            .novel-actions .btn {
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+
+            .chapter-item {
+                padding: 10px 12px;
+            }
+
+            .chapter-number {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+
+            .chapter-title {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .novel-actions .btn {
+                font-size: 0.75rem;
+                padding: 6px;
+            }
+
+            .chapter-item {
+                padding: 8px 10px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-color-muted);
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-color-muted);
+        }
+        .delete-success-container {
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .delete-success-container {
+                left: 0;
+            }
+        }
+
+        .delete-success-content {
+            text-align: center;
+            max-width: 400px;
+            padding: 40px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--card-border);
+        }
+
+        .delete-success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--success-color);
+        }
+
+        .delete-success-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
+        .delete-success-message {
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .delete-success-timer {
+            color: var(--text-color-muted);
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+    <!-- 防止主题闪烁的内联脚本 -->
+    <script>
+        // 立即执行，在CSS加载前设置主题
+        (function() {
+            try {
+                // 从localStorage获取保存的主题
+                const savedTheme = localStorage.getItem('theme');
+                const htmlElement = document.documentElement;
+
+                // 设置主题（默认为浅色）
+                if (savedTheme === 'dark') {
+                    htmlElement.setAttribute('data-theme', 'dark');
+                    htmlElement.style.colorScheme = 'dark';
+                } else {
+                    htmlElement.setAttribute('data-theme', 'light');
+                    htmlElement.style.colorScheme = 'light';
+                }
+
+                // 添加一个类名，表示主题已加载
+                htmlElement.classList.add('theme-loaded');
+            } catch (error) {
+                console.error('主题初始化失败:', error);
+            }
+        })();
+    </script>
+</head>
+<body>
+<!-- 侧边导航栏 -->
+<!-- 侧边导航栏 -->
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-book me-2"></i>小说阅读器</h3>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li class="nav-item">
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-home me-2"></i>主页
+            </a>
+        </li>
+        <li class="nav-item active">
+            <a href="import.html" class="nav-link">
+                <i class="fas fa-upload me-2"></i>导入小说
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-cog me-2"></i>阅读设置
+            </a>
+        </li>
+
+        <hr class="sidebar-divider">
+
+        <!-- 主题切换 -->
+        <li class="nav-item theme-toggle-container">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="themeToggle">
+                <label class="form-check-label" for="themeToggle">
+                    <i class="fas fa-moon me-2"></i>深色模式
+                </label>
+            </div>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <small class="text-muted">仅本地访问</small>
+    </div>
+</nav>
+
+<!-- 主内容区域 -->
+<main id="mainContent" class="main-content">
+    <div class="container-fluid h-100">
+        <div class="row h-100">
+            <!-- 小说信息区域 (占1/3高度) -->
+            <div class="col-12 mb-4" style="height: 35%; min-height: 300px;">
+                <div id="novelHeader" class="novel-header h-100" style="display: none;">
+                    <div class="d-flex flex-column flex-md-row h-100">
+                        <!-- 左侧：小说封面 -->
+                        <div class="novel-cover-section me-md-4 mb-3 mb-md-0">
+                            <div class="novel-cover-large">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        </div>
+
+                        <!-- 右侧：小说信息 -->
+                        <div class="novel-info-section flex-grow-1 d-flex flex-column">
+                            <!-- 标题和基本信息 -->
+                            <div class="novel-basic-info mb-3">
+                                <h1 id="novelTitle" class="novel-title-large mb-2">加载中...</h1>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="novel-meta-item">
+                                            <i class="fas fa-hashtag"></i>
+                                            <span>ID: <code id="novelId" class="ms-1"></code></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="novel-meta-item">
+                                            <i class="fas fa-user-edit"></i>
+                                            <span>作者: <span id="novelAuthor" class="ms-1">未知</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 统计信息 -->
+                            <div class="novel-stats-container mb-3 flex-grow-1">
+                                <div class="row g-3 h-80">
+                                    <div class="col-6 col-md-3 d-flex">
+                                        <div class="stat-box w-100 d-flex flex-column justify-content-center">
+                                            <div class="stat-value" id="totalChaptersStat">0</div>
+                                            <div class="stat-label">总章节</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3 d-flex">
+                                        <div class="stat-box w-100 d-flex flex-column justify-content-center">
+                                            <div class="stat-value" id="readChaptersStat">0</div>
+                                            <div class="stat-label">已读章节</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3 d-flex">
+                                        <div class="stat-box w-100 d-flex flex-column justify-content-center">
+                                            <div class="stat-value" id="readingProgressStat">0%</div>
+                                            <div class="stat-label">阅读进度</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3 d-flex">
+                                        <div class="stat-box w-100 d-flex flex-column justify-content-center">
+                                            <div class="stat-value" id="lastReadStat">-</div>
+                                            <div class="stat-label">上次阅读</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 操作按钮 -->
+                            <div class="novel-actions pt-3 border-top">
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-3">
+                                        <button id="startReadingBtn" class="btn btn-primary w-100">
+                                            <i class="fas fa-play me-2"></i>开始阅读
+                                        </button>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <button id="continueReadingBtn" class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-forward me-2"></i>继续阅读
+                                        </button>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <button id="backToLibraryBtn" class="btn btn-outline-secondary w-100">
+                                            <i class="fas fa-arrow-left me-2"></i>返回书架
+                                        </button>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <button id="deleteNovelBtn" class="btn btn-danger w-100">
+                                            <i class="fas fa-trash me-2"></i>删除本书
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 目录区域 (占2/3高度) -->
+            <div class="col-12" style="height: 65%; min-height: 400px;">
+                <div id="catalogSection" class="catalog-section h-100" style="display: none;">
+                    <div class="d-flex flex-column h-100">
+                        <!-- 目录标题和搜索 -->
+                        <div class="catalog-header mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="catalog-title mb-0">章节目录</h2>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button id="sortAscBtn" class="btn btn-outline-secondary active">
+                                            <i class="fas fa-sort-numeric-down me-1"></i>正序
+                                        </button>
+                                        <button id="sortDescBtn" class="btn btn-outline-secondary">
+                                            <i class="fas fa-sort-numeric-up me-1"></i>倒序
+                                        </button>
+                                    </div>
+                                    <div class="input-group search-chapters">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                        <input type="text" id="searchChaptersInput" class="form-control" placeholder="搜索章节...">
+                                        <button id="clearSearchBtn" class="btn btn-outline-secondary" style="display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 章节列表容器 -->
+                        <div class="chapters-list-container flex-grow-1">
+                            <div id="chaptersList" class="chapters-list">
+                                <!-- 章节列表将通过JS动态加载 -->
+                            </div>
+
+                            <!-- 目录空状态 -->
+                            <div id="catalogEmptyState" class="catalog-empty h-100" style="display: none;">
+                                <div class="h-100 d-flex flex-column justify-content-center align-items-center">
+                                    <i class="fas fa-book-open mb-3" style="font-size: 3rem;"></i>
+                                    <h4>暂无章节</h4>
+                                    <p class="text-muted">该小说还没有章节内容</p>
+                                </div>
+                            </div>
+
+                            <!-- 搜索空状态 -->
+                            <div id="searchEmptyState" class="catalog-empty h-100" style="display: none;">
+                                <div class="h-100 d-flex flex-column justify-content-center align-items-center">
+                                    <i class="fas fa-search mb-3" style="font-size: 3rem;"></i>
+                                    <h4>未找到相关章节</h4>
+                                    <p class="text-muted">尝试使用不同的关键词搜索</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分页信息 -->
+                        <div class="catalog-footer mt-3 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted small" id="chaptersCount">
+                                    共 0 章
+                                </div>
+                                <div class="text-muted small">
+                                    当前显示: <span id="currentDisplayRange">0-0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loadingState" class="loading-spinner">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-3">正在加载小说信息...</p>
+            </div>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorState" class="empty-state" style="display: none;">
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle mb-3" style="font-size: 3rem;"></i>
+                <h4>加载失败</h4>
+                <p id="errorMessage" class="mb-4">无法加载小说信息，请返回书架重试</p>
+                <a href="../index.html" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>返回书架
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    确认删除
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    此操作不可恢复！请谨慎操作。
+                </div>
+                <p>确定要删除小说 <strong id="deleteNovelName">未知</strong> 吗？</p>
+                <p class="text-muted small">这将删除小说的所有数据，包括阅读进度和章节内容。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>取消
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 共享JS -->
+<script src="../js/storage.js"></script>
+<script src="../js/theme.js"></script>
+
+<!-- 目录页面专用JS -->
+<script src="../js/catalog.js"></script>
+</body>
+</html>

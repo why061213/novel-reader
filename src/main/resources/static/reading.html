@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阅读 - 本地小说阅读器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 防止主题闪烁 */
+        <script>
+        (function() {
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            const html = document.documentElement;
+            if (savedTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            html.style.colorScheme = 'dark';
+        } else {
+              html.setAttribute('data-theme', 'light');
+              html.style.colorScheme = 'light';
+          }
+            html.classList.add('theme-loaded');
+        } catch (e) {}
+        })();
+        </script>
+
+          body {
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+              height: 100vh;
+              font-family: 'SimSun', '宋体', serif;
+          }
+        .reader-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+        }
+        .chapter-header {
+            text-align: center;
+            padding: 20px 15px;
+            border-bottom: 1px solid var(--card-border);
+            background: var(--sidebar-bg);
+        }
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin: 0;
+        }
+        .chapter-content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15px;
+            color: var(--text-color);
+            line-height: 2;
+            font-size: 1.1rem;
+            text-align: justify;
+            white-space: pre-wrap;
+        }
+        .reader-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        .nav-btn {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: #fff;
+        }
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .chapter-info {
+            color: var(--text-color-muted);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 576px) {
+            .chapter-title { font-size: 1.2rem; }
+            .chapter-content-wrapper { font-size: 1rem; padding: 10px; }
+        }
+        /* 覆盖 main.css 中可能存在的侧边栏布局 */
+        #mainContent,
+        .main-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        .reader-container {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        body {
+            overflow: hidden; /* 保持原有 */
+        }
+        .reader-toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 200;
+            box-sizing: border-box;
+        }
+        .toolbar-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .toolbar-btn:hover {
+            background: var(--sidebar-bg);
+        }
+        .theme-switch {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch .form-check-input {
+            margin-right: 5px;
+        }
+        .reader-container {
+            padding-top: 48px;
+            height: 100vh;
+
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部工具栏 -->
+<nav class="reader-toolbar">
+    <div class="toolbar-left">
+        <button id="backHomeBtn" class="toolbar-btn" title="返回主页">
+            <i class="fas fa-home"></i>
+        </button>
+        <button id="backCatalogBtn" class="toolbar-btn" title="返回目录">
+            <i class="fas fa-list"></i>
+        </button>
+    </div>
+    <div class="toolbar-right">
+        <div class="form-check form-switch theme-switch">
+            <input class="form-check-input" type="checkbox" id="themeToggle">
+            <label class="form-check-label" for="themeToggle">
+                <i class="fas fa-moon"></i>
+            </label>
+        </div>
+    </div>
+</nav>
+<main class="reader-container">
+    <div class="chapter-header">
+        <h2 id="chapterTitle" class="chapter-title">加载中...</h2>
+    </div>
+    <div id="chapterContent" class="chapter-content-wrapper">
+        <div class="text-center mt-5">
+            <i class="fas fa-spinner fa-spin"></i> 正在加载章节...
+        </div>
+    </div>
+</main>
+
+<!-- 底部导航栏 -->
+<div id="readerFooter" class="reader-footer">
+    <div class="novel-info">
+        <span id="novelName">小说名</span>
+    </div>
+    <div class="nav-buttons">
+        <button id="prevBtn" class="nav-btn" disabled>
+            <i class="fas fa-arrow-left"></i> 上一章
+        </button>
+        <button id="nextBtn" class="nav-btn" disabled>
+            下一章 <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+    <div class="chapter-info">
+        <span id="chapterIndicator">0/0</span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/reading.js"></script>
+</body>
+</html>

@@ -28,6 +28,9 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+# 小说数据目录（本地内容，不上传）
+novel-data/
+novel-storage/
 
 ### VS Code ###
 .vscode/

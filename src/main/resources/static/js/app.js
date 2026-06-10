@@ -251,7 +251,7 @@ const AppManager = {
             this.addToHistory(novel, chapterIndex);
 
             // 跳转到阅读页面
-            window.location.href = `reading.html?novel=${novelId}&chapter=${chapterIndex}`;
+            window.location.href = `reading.html?novelId=${novelId}&chapter=${chapterIndex}`;
         }
     },
 
